@@ -3,7 +3,8 @@ var api     = require("./lib/api.js")
   , cred    = require("./etc/api-key.json")
   , _       = require("underscore")
   , program = require('commander')
-  , Table   = require('cli-table');
+  , Table   = require('cli-table')
+  , colors  = require('colors'); 
 
 var bind_hander= function(fn, handler){
   return function(){
@@ -27,14 +28,18 @@ var print = function(json,cmd){
 var print_status = function(json,cmd){
   if(json.droplets){
     
+    var droplets = _.sortBy(json.droplets,function(x){
+      return x.status;
+    });
+
     var table = new Table({
       head: ['ID', 'NAME', 'STATUS'], 
       colWidths: [10,20,10]
     });
     
-    _.each(json.droplets,function(x){
+    _.each(droplets,function(x){
       table.push(
-        [x.id, x.name, x.status]
+        [x.id, x.name, x.status==="off" ? x.status.yellow : x.status.green]
       );
     });
     

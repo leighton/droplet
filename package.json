@@ -9,6 +9,7 @@
     "underscore" : "*",
     "request" : "*",
     "commander" : "*",
-    "cli-table" : "*"
+    "cli-table" : "*",
+    "colors" : "*"
   }
 }
