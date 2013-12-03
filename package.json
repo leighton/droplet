@@ -1,0 +1,13 @@
+{
+  "name": "droplet-cli",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "exec": "node app.js"
+  },
+  "dependencies": {
+    "underscore" : "*",
+    "request" : "*",
+    "commander" : "*"
+  }
+}
