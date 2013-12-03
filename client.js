@@ -20,6 +20,10 @@ var bind_hander= function(fn, handler){
   }
 };
 
+var print = function(json,cmd){
+  console.log(json);
+}
+
 var print_status = function(json,cmd){
   if(json.droplets){
     
@@ -45,17 +49,17 @@ program
 program
   .command('power <name> <state>')
   .description('Power (on|off) droplet')
-  .action(bind_hander(api.power,console.log));
+  .action(bind_hander(api.power,print));
 
 program
   .command('shutdown <name>')
   .description('Shutdown droplet')
-  .action(bind_hander(api.shutdown,console.log));
+  .action(bind_hander(api.shutdown,print));
 
 program
   .command('snapshot <droplet_name> <snapshot_name>')
   .description('Snapshot droplet')
-  .action(bind_hander(api.snapshot,console.log));
+  .action(bind_hander(api.snapshot,print));
 
 /**
  * Images API
@@ -94,7 +98,7 @@ program
 program
   .command('destroy-image <id>')
   .description('Destroy image')
-  .action(bind_hander(api.destroy_image, console.log));
+  .action(bind_hander(api.destroy_image, print));
 
 
 api.init(cred, function(){
