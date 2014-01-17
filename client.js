@@ -33,13 +33,13 @@ var print_status = function(json,cmd){
     });
 
     var table = new Table({
-      head: ['ID', 'NAME', 'STATUS'], 
-      colWidths: [10,20,10]
+      head: ['ID', 'NAME', 'IP ADDRESS', 'STATUS'], 
+      colWidths: [10,20,20,10]
     });
     
     _.each(droplets,function(x){
       table.push(
-        [x.id, x.name, x.status==="off" ? x.status.yellow : x.status.green]
+        [x.id, x.name, x.ip_address, x.status==="off" ? x.status.yellow : x.status.green]
       );
     });
     
