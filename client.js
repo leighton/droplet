@@ -1,17 +1,19 @@
 
-var api     = require("./lib/api.js")
-  , cred    = require("./etc/api-key.json")
-  , _       = require("underscore")
-  , program = require('commander')
-  , Table   = require('cli-table')
-  , colors  = require('colors'); 
+var api       = require("./lib/api.js")
+  , handlers  = require("./lib/handlers")
+  , cred      = require("./etc/api-key.json")
+  , _         = require("underscore")
+  , program   = require('commander')
 
-var bind_hander= function(fn, handler){
+
+var bind_handler= function(fn, handler){
   return function(){
     var args = Array.prototype.slice.call(arguments);
     //rather fortunate the last argument is commander details
     //make it the handler instead
     var commander_arg = args[args.length-1];
+    //console.log(commander_arg);
+
     args[args.length-1] = function(){ //bind handler as callback to API
       var a = Array.prototype.slice.call(arguments);
       a.push(commander_arg); //bind commander argument to handler
@@ -21,91 +23,76 @@ var bind_hander= function(fn, handler){
   }
 };
 
-var print = function(json,cmd){
-  console.log(json);
-}
+/**
+ * Droplet API
+ */
 
-var print_status = function(json,cmd){
-  if(json.droplets){
-    
-    var droplets = _.sortBy(json.droplets,function(x){
-      return x.status;
-    });
-
-    var table = new Table({
-      head: ['ID', 'NAME', 'IP ADDRESS', 'STATUS'], 
-      colWidths: [10,20,20,10]
-    });
-    
-    _.each(droplets,function(x){
-      table.push(
-        [x.id, x.name, x.ip_address, x.status==="off" ? x.status.yellow : x.status.green]
-      );
-    });
-    
-    console.log(table.toString()); 
-  }
-};
 program
   .command('status')
   .description('Status of your droplets')
-  .action(bind_hander(api.status, print_status));
+  .action(bind_handler(api.status, handlers.tabulate_status));
+
+program
+  .command('status <name>')
+  .description('Status of your droplet')
+  .action(bind_handler(api.status, handlers.print));
+//TODO: when calling status <name> both functions are called!
 
 program
   .command('power <name> <state>')
   .description('Power (on|off) droplet')
-  .action(bind_hander(api.power,print));
+  .action(bind_handler(api.power, handlers.print));
 
 program
   .command('shutdown <name>')
   .description('Shutdown droplet')
-  .action(bind_hander(api.shutdown,print));
+  .action(bind_handler(api.shutdown, handlers.print));
 
 program
   .command('snapshot <droplet_name> <snapshot_name>')
   .description('Snapshot droplet')
-  .action(bind_hander(api.snapshot,print));
+  .action(bind_handler(api.snapshot, handlers.print));
+
+program
+  .command('destroy <droplet_name>')
+  .description('Destroy the droplet')
+  .action(bind_handler(api.destroy, handlers.print));
+
 
 /**
  * Images API
  */
-var print_images = function(json,cmd){
-  
-  if(json.images){
-    var table = new Table({
-      head: ['ID', 'PUBLIC', 'OS', 'NAME'], 
-      colWidths: [10,10,15,30]
-    });
-
-    _.each(json.images,function(x){
-      if(cmd.all){
-        table.push(
-          [x.id, x.public, x.distribution, x.name]
-        );
-      }else{
-        if(!x.public){
-          table.push(
-            [x.id, x.public, x.distribution, x.name]
-          );
-        }
-      }
-    });
-    
-    console.log(table.toString());
-  }
-};
 program
   .command('images')
   .description('Droplet images')
-  .option('-a, --all', 'Print all images not just private')
-  .action(bind_hander(api.images, print_images));
+  .option('-g, --global', 'Print all images not just private', false)
+  .action(function(cmd){
+    bind_handler(_.partial(api.images,!cmd.global), handlers.tabulate_images)(cmd)
+  });
 
 program
   .command('destroy-image <id>')
   .description('Destroy image')
-  .action(bind_hander(api.destroy_image, print));
+  .action(bind_handler(api.destroy_image, handlers.print));
 
 
+/**
+ * Composite commands
+ */
+program
+  .command('ice <droplet_name>')
+  .description('Snapshot then destroy droplet')
+  .action(bind_handler(api.ice, handlers.print));
+
+program
+  .command('thaw <droplet_name>')
+  .description('Create from snapshot then destroy snapshot')
+  .action(bind_handler(api.thaw, handlers.print));
+
+
+/**
+ * Initiate the API and start
+ */
 api.init(cred, function(){
   program.parse(process.argv);
 });
